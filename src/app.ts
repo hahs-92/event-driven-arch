@@ -8,8 +8,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "http://localhost:8080",
+      "http://localhost:5001",
+      "http://localhost:5000",
       "http://localhost:4200",
     ],
   })

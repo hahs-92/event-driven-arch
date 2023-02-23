@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 
 import { AppDataSource } from "../database/dataSource";
 import { Product } from "../entities/product.entity";
+import { Producer } from "../libs/rabbitmq";
+
+const producer = new Producer();
 
 export async function getAll(req: Request, res: Response): Promise<void> {
   try {
@@ -26,6 +29,12 @@ export async function create(req: Request, res: Response): Promise<void> {
     // const result = await AppDataSource.manager.save(newProduct);
     const repo = AppDataSource.getRepository(Product);
     const result = await repo.save(newProduct);
+
+    //rabbit
+    // const conn = await rabbitConnect();
+    // const ch = await conn.createChannel();
+    // ch.sendToQueue("product_created", Buffer.from(JSON.stringify(result)));
+    producer.publishMessage("product_created", JSON.stringify(result));
 
     res.status(201).json(result);
   } catch (error) {
@@ -65,6 +74,13 @@ export async function update(req: Request, res: Response): Promise<void> {
     // repo.merge(product, body);
     product = { ...product, ...body } as Product;
     const result = await repo.save(product);
+
+    //rabbit
+    // const conn = await rabbitConnect();
+    // const ch = await conn.createChannel();
+    // ch.sendToQueue("product_updated", Buffer.from(JSON.stringify(result)));
+    producer.publishMessage("product_updated", JSON.stringify(result));
+
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error);
@@ -82,6 +98,12 @@ export async function remove(req: Request, res: Response): Promise<void> {
       return;
     }
     await repo.remove(product);
+    //rabbit
+    // const conn = await rabbitConnect();
+    // const ch = await conn.createChannel();
+    // ch.sendToQueue("product_removed", Buffer.from(id));
+    producer.publishMessage("product_removed", id);
+
     res.status(200).send("Product removed¡");
   } catch (error) {
     res.status(500).send(error);
